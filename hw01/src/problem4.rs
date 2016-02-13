@@ -29,27 +29,27 @@ pub fn hanoi(num_discs: u32, src: Peg, aux: Peg, dst: Peg) -> Vec<Move> {
     };
     
     for i in 1..number_of_moves {
-        match i % 3 {
+        let hanoi_move: Move = match i % 3 {
             1 => {
                 match num_discs % 2 {
-                    0 => moves.push(make_a_move(&mut src_peg, src, &mut aux_peg, aux)),
-                    _ => moves.push(make_a_move(&mut src_peg, src, &mut dst_peg, dst)),
+                    0 => make_a_move(&mut src_peg, src, &mut aux_peg, aux),
+                    _ => make_a_move(&mut src_peg, src, &mut dst_peg, dst),
                 }
             },
             2 => {
                 match num_discs % 2 {
-                    0 => moves.push(make_a_move(&mut src_peg, src, &mut dst_peg, dst)),
-                    _ => moves.push(make_a_move(&mut src_peg, src, &mut aux_peg, aux)),
+                    0 => make_a_move(&mut src_peg, src, &mut dst_peg, dst),
+                    _ => make_a_move(&mut src_peg, src, &mut aux_peg, aux),
                 }
             },
-            0 => {
+            _ => {
                 match num_discs % 2 {
-                    0 => moves.push(make_a_move(&mut dst_peg, dst, &mut aux_peg, aux)),
-                    _ => moves.push(make_a_move(&mut aux_peg, aux, &mut dst_peg, dst)),
+                    0 => make_a_move(&mut dst_peg, dst, &mut aux_peg, aux),
+                    _ => make_a_move(&mut aux_peg, aux, &mut dst_peg, dst),
                 }
             },
-            _ => (),
-        }
+        };
+        moves.push(hanoi_move);
     }
 
     moves
