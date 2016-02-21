@@ -15,6 +15,11 @@ struct Node<T> {
 #[derive(Debug)]
 pub struct IntoIter<T>(BST<T>);
 
+#[derive(Debug)]
+pub struct Iter<'a, T: 'a> {
+    next: Option<&'a Node<T>>,
+}
+
 impl<T: Ord> BST<T> {
     pub fn new() -> Self {
         BST { root: None }
@@ -83,7 +88,7 @@ impl<T: Ord> InsertSearch<T> for Link<T> {
     }
 }
 
-impl<T: Ord> Iterator for IntoIter<T> {
+impl<T> Iterator for IntoIter<T> {
     type Item = T;
     
     fn next(&mut self) -> Option<Self::Item> {
@@ -95,12 +100,35 @@ impl<T: Ord> Iterator for IntoIter<T> {
     }
 }
 
-impl<T: Ord> IntoIterator for BST<T> {
+// implementation of the iterator
+impl<'a, T> Iterator for Iter<'a, T> {
+    type Item = &'a T;
+    
+    fn next(&mut self) -> Option<Self::Item> {
+        self.next.map(|node| {
+            self.next = node.right.as_ref().map(|node| &**node);
+            &node.elem
+        })
+    }
+}
+
+// sugar use iterator on for loops
+impl<T> IntoIterator for BST<T> {
     type Item = T;
     type IntoIter = IntoIter<T>;
 
     fn into_iter(self) -> Self::IntoIter {
         IntoIter(self)
+    }
+}
+
+//// sugar to use iterator on for loops
+impl <'a, T> IntoIterator for &'a BST<T> {
+    type Item = &'a T;
+    type IntoIter = Iter<'a, T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        Iter { next: self.root.as_ref().map(|node| &**node) }
     }
 }
 
@@ -169,6 +197,18 @@ mod test_iter {
     use super::BST;
 
     #[test]
+    fn into_iter_compiles() {
+        let mut bst = BST::new();
+        bst.insert(1);
+        bst.insert(2);
+        bst.insert(4);
+        bst.insert(3);
+        for elem in bst {
+            println!("{}", elem);
+        }
+    }
+
+    #[test]
     fn into_iter() {
         let mut bst = BST::new();
         bst.insert(1);
@@ -179,6 +219,34 @@ mod test_iter {
         assert_eq!(iter.next(), Some(1));
         assert_eq!(iter.next(), Some(2));
         assert_eq!(iter.next(), Some(4));
+        assert_eq!(iter.next(), None);
+        assert_eq!(iter.next(), None);
+    }
+
+    #[test]
+    fn ref_into_iter_compiles() {
+        let mut bst = BST::new();
+        bst.insert(1);
+        bst.insert(2);
+        bst.insert(4);
+        bst.insert(3);
+        println!("ref iter");
+        for elem in &bst {
+            println!("{}", elem);
+        }
+    }
+
+    #[test]
+    fn ref_into_iter() {
+        let mut bst = BST::new();
+        bst.insert(1);
+        bst.insert(2);
+        bst.insert(4);
+        bst.insert(3);
+        let mut iter = (&bst).into_iter();
+        assert_eq!(iter.next(), Some(&1));
+        assert_eq!(iter.next(), Some(&2));
+        assert_eq!(iter.next(), Some(&4));
         assert_eq!(iter.next(), None);
         assert_eq!(iter.next(), None);
     }
