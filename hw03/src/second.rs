@@ -1,39 +1,39 @@
 #[derive(Debug)]
-pub struct BST {
-    root: Link,
+pub struct BST<T> {
+    root: Link<T>,
 }
 
-type Link = Option<Box<Node>>;
+type Link<T> = Option<Box<Node<T>>>;
 
-#[derive(Debug)]
-struct Node {
-    elem: i32,
-    left: Link,
-    right: Link,
+#[derive(Debug,PartialEq)]
+struct Node<T> {
+    elem: T,
+    left: Link<T>,
+    right: Link<T>,
 }
 
-impl BST {
+impl<T: Ord> BST<T> {
     pub fn new() -> Self {
         BST { root: None }
     }
 
-    pub fn insert(&mut self, value: i32) -> bool {
+    pub fn insert(&mut self, value: T) -> bool {
         return self.root.insert(value)
     }
 
-    pub fn search(&self, value: i32) -> bool {
+    pub fn search(&self, value: T) -> bool {
         return self.root.search(value)
    }
 }
 
-trait InsertSearch {
-    fn insert(&mut self, value: i32) -> bool;
-    fn search(&self, value: i32) -> bool;
+trait InsertSearch<T: Ord> {
+    fn insert(&mut self, value: T) -> bool;
+    fn search(&self, value: T) -> bool;
 
 }
 
-impl InsertSearch for Link {
-    fn insert(&mut self, value: i32) -> bool {
+impl<T: Ord> InsertSearch<T> for Link<T> {
+    fn insert(&mut self, value: T) -> bool {
         match *self {
             None => {
                 let new_node = Box::new(Node {
@@ -60,7 +60,7 @@ impl InsertSearch for Link {
         }
     }
 
-    fn search(&self, value: i32) -> bool {
+    fn search(&self, value: T) -> bool {
         match *self {
             None => false,
             Some(ref boxed_node) => {
@@ -84,11 +84,13 @@ impl InsertSearch for Link {
 #[cfg(test)]
 mod test_bst {
     use super::BST;
+    use super::Node;
 
     #[test]
     fn bst_insert() {
         let mut bst = BST::new();
         assert_eq!(bst.insert(20), true);
+        assert_eq!(bst.root.as_ref(), Some(&Box::new(Node { elem: 20, left: None, right: None })));
         assert_eq!(bst.insert(10), true);
         assert_eq!(bst.insert(30), true);
         assert_eq!(bst.insert(30), false);
