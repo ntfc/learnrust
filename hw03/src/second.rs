@@ -12,6 +12,9 @@ struct Node<T> {
     right: Link<T>,
 }
 
+#[derive(Debug)]
+pub struct IntoIter<T>(BST<T>);
+
 impl<T: Ord> BST<T> {
     pub fn new() -> Self {
         BST { root: None }
@@ -80,6 +83,26 @@ impl<T: Ord> InsertSearch<T> for Link<T> {
     }
 }
 
+impl<T: Ord> Iterator for IntoIter<T> {
+    type Item = T;
+    
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0.root.take().map(|boxed_node| {
+            let node = *boxed_node;
+            self.0.root = node.right;
+            node.elem
+        })
+    }
+}
+
+impl<T: Ord> IntoIterator for BST<T> {
+    type Item = T;
+    type IntoIter = IntoIter<T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        IntoIter(self)
+    }
+}
 
 #[cfg(test)]
 mod test_bst {
@@ -138,5 +161,25 @@ mod test_link {
         assert_eq!(link.insert(10), true);
         assert_eq!(link.search(10), true);
         assert_eq!(link.search(6), false);
+    }
+}
+
+#[cfg(test)]
+mod test_iter {
+    use super::BST;
+
+    #[test]
+    fn into_iter() {
+        let mut bst = BST::new();
+        bst.insert(1);
+        bst.insert(2);
+        bst.insert(4);
+        bst.insert(3);
+        let mut iter = bst.into_iter();
+        assert_eq!(iter.next(), Some(1));
+        assert_eq!(iter.next(), Some(2));
+        assert_eq!(iter.next(), Some(4));
+        assert_eq!(iter.next(), None);
+        assert_eq!(iter.next(), None);
     }
 }
