@@ -90,8 +90,8 @@ impl Stack {
             Op::Swap => {
                 let elt_a = try!(self.pop());
                 let elt_b = try!(self.pop());
-                self.push(elt_a);
-                self.push(elt_b);
+                self.push(elt_a).unwrap();
+                self.push(elt_b).unwrap();
                 Ok(())
             },
             Op::Rand => {
@@ -101,7 +101,7 @@ impl Stack {
                         let mut rng = thread_rng();
                         self.push(Elt::Int(rng.gen_range(0, a)))
                     }
-                    Elt::Bool(a) => Err(Error::Type)
+                    Elt::Bool(_) => Err(Error::Type)
                 }
             },
             Op::Quit => Err(Error::Quit),
