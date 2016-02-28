@@ -1,5 +1,6 @@
 use std::result;
 use std::io;
+use rand::{thread_rng,Rng};
 
 #[derive(Eq, PartialEq, Ord, PartialOrd, Debug)]
 /// An element of the stack. May be either integer or boolean.
@@ -49,22 +50,62 @@ pub type Result<T> = result::Result<T, Error>;
 impl Stack {
     /// Creates a new Stack
     pub fn new() -> Stack {
-        unimplemented!()
+        Stack { values: Vec::new() }
     }
 
     /// Pushes a value onto the stack.
     pub fn push(&mut self, val: Elt) -> Result<()> {
-        unimplemented!()
+        self.values.push(val);
+        Ok(())
     }
 
     /// Tries to pop a value off of the stack.
     pub fn pop(&mut self) -> Result<Elt> {
-        unimplemented!()
+        self.values.pop().map(|e| Ok(e)).unwrap_or(Err(Error::Underflow))
     }
 
     /// Tries to evaluate an operator using values on the stack.
     pub fn eval(&mut self, op: Op) -> Result<()> {
-        unimplemented!()
+        match op {
+            Op::Add => {
+                let elt_a = try!(self.pop());
+                let elt_b = try!(self.pop());
+                match (elt_a, elt_b) {
+                    (Elt::Int(a), Elt::Int(b)) => self.push(Elt::Int(a + b)),
+                    _ => Err(Error::Type),
+                }
+            },
+            Op::Eq => {
+                let elt_a = try!(self.pop());
+                let elt_b = try!(self.pop());
+                self.push(Elt::Bool(elt_a == elt_b))
+            },
+            Op::Neg => {
+                let elt_a = try!(self.pop());
+                match elt_a {
+                    Elt::Int(a) => self.push(Elt::Int(-a)),
+                    Elt::Bool(a) => self.push(Elt::Bool(!a)),
+                }
+            },
+            Op::Swap => {
+                let elt_a = try!(self.pop());
+                let elt_b = try!(self.pop());
+                self.push(elt_a);
+                self.push(elt_b);
+                Ok(())
+            },
+            Op::Rand => {
+                let elt_a = try!(self.pop());
+                match elt_a {
+                    Elt::Int(a) => {
+                        let mut rng = thread_rng();
+                        self.push(Elt::Int(rng.gen_range(0, a)))
+                    }
+                    Elt::Bool(a) => Err(Error::Type)
+                }
+            },
+            Op::Quit => Err(Error::Quit),
+        }
     }
 }
 
